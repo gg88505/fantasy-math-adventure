@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="color-scheme" content="light dark" />
 <link rel="icon" href="data:," />
-<title>奇幻森林數學大冒險 V12</title>
+<title>奇幻森林數學大冒險 V13</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Fredoka:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Serif+TC:wght@700;900&display=swap" rel="stylesheet" />
@@ -270,6 +270,11 @@ h2,h3,.serif{font-family:"Noto Serif TC","Noto Sans TC",serif;}
 .back-btn:active{transform:scale(.96);}
 .rules-line{font-size:13px; line-height:1.7; color:var(--ink-soft); margin:0;}
 .footer-note{text-align:center; color:rgba(255,233,176,.75); font-size:12px; margin-top:22px; line-height:1.6;}
+/* V13：清除紀錄按鈕（主畫面最下方、守則下面，好找但不搶眼、不易誤觸，點了還要再確認一次） */
+.reset-wrap{text-align:center; margin-top:18px;}
+.reset-btn{background:transparent; color:rgba(255,233,176,.75); border:2px solid rgba(255,233,176,.45);
+  border-radius:999px; padding:8px 18px; font-size:13.5px; font-weight:800;}
+.reset-btn:active{transform:scale(.96);}
 
 /* ---------- Battle (Option B: HP header / tall stage / question bar / flat image keypad) ---------- */
 .battle-top{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px;}
@@ -531,7 +536,10 @@ h2,h3,.serif{font-family:"Noto Serif TC","Noto Sans TC",serif;}
     <div class="panel">
       <p class="rules-line">✅ <b>答對</b>：冒險者攻擊！小怪 1 滴血、大魔王 5 滴血。　💥 <b>答錯</b>：勇者扣 1 滴血（共 10 滴），歸零或累計答錯 10 次就挑戰失敗。　🪙 <b>獎勵</b>：通關 +5 金幣，乘法特訓打敗魔王 +10 金幣。　🗡️ <b>寶劍與盾牌</b>：商城有五把劍和五個盾（各 10／20／30／40／50 金幣），買了按「裝備」，勇者右手拿劍、左手拿盾，隨時可以換回空手。　🧮 <b>乘法特訓</b>：每套 12 題，每題 2 次機會，勇者只有 3 格血，魔王答對 1 題就算成功。　👹 <b>魔王進階題</b>：加法、減法的後 5 題會升級成 11～19 加減個位數（例如 14＋6、18－7），減法一樣不會出現負數。</p>
     </div>
-    <p class="footer-note">V12 五階裝備版：金幣、裝備與兌換紀錄都會保存在這台裝置的瀏覽器裡，下次打開遊戲還在喔。</p>
+    <div class="reset-wrap">
+      <button class="reset-btn" id="resetSaveBtn" type="button">🧹 清除紀錄（全部歸零）</button>
+    </div>
+    <p class="footer-note">V13 五階裝備版：金幣、裝備與兌換紀錄都會保存在這台裝置的瀏覽器裡，下次打開遊戲還在喔。</p>
   </section>
 
   <!-- ============ BATTLE ============ -->
@@ -1549,6 +1557,25 @@ function openModal(icon, title, text, extraHtml, actions){
 }
 function closeModal(){ $("modalOverlay").hidden = true; }
 
+/* ================= V13：清除紀錄（只清這個遊戲的 localStorage 存檔） ================= */
+function askResetSave(){
+  openModal("🧹", "確定要清除全部紀錄嗎？",
+    "清除之後會全部歸零、不能恢復：金幣變成 0、已買的劍和盾全部消失、裝備回到空手、通關紀錄和兌換歷史紀錄全部歸零，要重新開始冒險。",
+    '<div class="m-stats"><span>🪙 金幣 → 0</span><span>🗡️ 劍盾 → 全部消失</span><span>🏆 通關 → 全部歸零</span></div>',
+    [
+      { label:"取消", cls:"btn-ghost", fn:function(){ closeModal(); } },
+      { label:"確定清除，全部歸零", cls:"btn-danger", fn:function(){
+          closeModal();
+          try{ localStorage.removeItem(SAVE_KEY); }catch(e){}
+          save = { coins:0, owned:[], history:[], cleared:{}, soundOn:true, equipped:null, equippedShield:null };
+          try{ localStorage.removeItem(SAVE_KEY); }catch(e){}
+          battle = null;
+          refreshTop(); updateHeroImages(); renderMenu(); showView("menu");
+          toast("🧹 紀錄已清除，從頭開始冒險吧！");
+        } }
+    ]);
+}
+
 /* ================= 初始化 ================= */
 function initFireflies(){
   var box = $("fireflies");
@@ -1573,6 +1600,7 @@ $("soundBtn").addEventListener("click", function(){
   else toast("🔇 音效已關閉");
 });
 $("shopBanner").addEventListener("click", function(){ sfx("click"); renderShop(); showView("shop"); });
+$("resetSaveBtn").addEventListener("click", function(){ sfx("click"); askResetSave(); });
 $("shopBackBtn").addEventListener("click", function(){ sfx("click"); renderMenu(); showView("menu"); });
 $("unequipBtn").addEventListener("click", function(){ unequipItem(); });
 $("unequipShieldBtn").addEventListener("click", function(){ unequipShieldItem(); });
